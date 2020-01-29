@@ -16,10 +16,10 @@ enum Limit {
 
 export type Options = {
   root: Element
-  idName: (name: string) => boolean
-  className: (name: string) => boolean
-  tagName: (name: string) => boolean
-  attr: (name: string, value: string) => boolean,
+  idName: (name: string, input: Element, index: number) => boolean
+  className: (name: string, input: Element, index: number) => boolean
+  tagName: (name: string, input: Element, index: number) => boolean
+  attr: (name: string, value: string, input: Element, index: number) => boolean,
   seedMinLength: number
   optimizedMinLength: number
   threshold: number,
@@ -40,10 +40,10 @@ export default function (input: Element, options?: Partial<Options>) {
 
   const defaults: Options = {
     root: document.body,
-    idName: (name: string) => true,
-    className: (name: string) => true,
-    tagName: (name: string) => true,
-    attr: (name: string, value: string) => false,
+    idName: (name: string, input: Element, index: number) => true,
+    className: (name: string, input: Element, index: number) => true,
+    tagName: (name: string, input: Element, index: number) => true,
+    attr: (name: string, value: string, input: Element, index: number) => false,
     seedMinLength: 1,
     optimizedMinLength: 2,
     threshold: 1000,
@@ -95,7 +95,7 @@ function bottomUpSearch(input: Element, limit: Limit, fallback?: () => Path | nu
   let i = 0
 
   while (current && current !== config.root.parentElement) {
-    let level: Node[] = maybe(id(current)) || maybe(...attr(current)) || maybe(...classNames(current)) || maybe(tagName(current))  || [any()]
+    let level: Node[] = maybe(id(current, i)) || maybe(...attr(current, i)) || maybe(...classNames(current, i)) || maybe(tagName(current, i))  || [any()]
 
     const nth = index(current)
 
@@ -189,9 +189,9 @@ function unique(path: Path) {
   }
 }
 
-function id(input: Element): Node | null {
+function id(input: Element, index: number): Node | null {
   const elementId = input.getAttribute('id')
-  if (elementId && config.idName(elementId)) {
+  if (elementId && config.idName(elementId, input, index)) {
     return {
       name: '#' + cssesc(elementId, {isIdentifier: true}),
       penalty: config.penalties.id
@@ -200,8 +200,8 @@ function id(input: Element): Node | null {
   return null
 }
 
-function attr(input: Element): Node[] {
-  const attrs = Array.from(input.attributes).filter((attr) => config.attr(attr.name, attr.value))
+function attr(input: Element, index: number): Node[] {
+  const attrs = Array.from(input.attributes).filter((attr) => config.attr(attr.name, attr.value, input, index))
 
   return attrs.map((attr): Node => ({
     name: '[' + cssesc(attr.name, {isIdentifier: true}) + '="' + cssesc(attr.value) + '"]',
@@ -209,9 +209,9 @@ function attr(input: Element): Node[] {
   }))
 }
 
-function classNames(input: Element): Node[] {
+function classNames(input: Element, index: number): Node[] {
   const names = Array.from(input.classList)
-    .filter(config.className)
+    .filter(name => config.className(name, input, index))
 
   return names.map((name): Node => ({
     name: '.' + cssesc(name, {isIdentifier: true}),
@@ -219,9 +219,9 @@ function classNames(input: Element): Node[] {
   }))
 }
 
-function tagName(input: Element): Node | null {
+function tagName(input: Element, index: number): Node | null {
   const name = input.tagName.toLowerCase()
-  if (config.tagName(name)) {
+  if (config.tagName(name, input, index)) {
     return {
       name,
       penalty: config.penalties.tagName
