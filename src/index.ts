@@ -23,11 +23,19 @@ export type Options = {
   seedMinLength: number
   optimizedMinLength: number
   threshold: number,
+  priorityList: String[],
   penalties: any,
 }
 
 let config: Options
 let rootDocument: Document | Element
+let fnNameToPriorityName = {
+  'id': id,
+  'attr': attr,
+  'className': classNames,
+  'tagName': tagName,
+  'any': any,
+}
 
 export default function (input: Element, options?: Partial<Options>) {
   if (input.nodeType !== Node.ELEMENT_NODE) {
@@ -47,6 +55,7 @@ export default function (input: Element, options?: Partial<Options>) {
     seedMinLength: 1,
     optimizedMinLength: 2,
     threshold: 1000,
+    priorityList: ['id', 'attr', 'className', 'tagName'],
     penalties: {
       id: 0,
       attr: 0.5,
@@ -88,6 +97,21 @@ function findRootDocument(rootNode: Element | Document, defaults: Options) {
   return rootNode
 }
 
+function getNodeLevel(input: Element, index: number): Node[] {
+  let fnName;
+  let result;
+  let filteredResult;
+  for (let i = 0; i < config.priorityList.length; i++) {
+    fnName = config.priorityList[i];
+    result = fnNameToPriorityName[fnName](input, index);
+    filteredResult = fnName === 'id' ? maybe(result) : maybe(...result);
+    if (filteredResult) {
+      return filteredResult;
+    }
+  }
+  return [any()];
+}
+
 function bottomUpSearch(input: Element, limit: Limit, fallback?: () => Path | null): Path | null {
   let path: Path | null = null
   let stack: Node[][] = []
@@ -95,7 +119,7 @@ function bottomUpSearch(input: Element, limit: Limit, fallback?: () => Path | nu
   let i = 0
 
   while (current && current !== config.root.parentElement) {
-    let level: Node[] = maybe(id(current, i)) || maybe(...attr(current, i)) || maybe(...classNames(current, i)) || maybe(tagName(current, i))  || [any()]
+    let level: Node[] = getNodeLevel(current, i);
 
     const nth = index(current)
 
