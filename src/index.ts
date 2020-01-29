@@ -46,6 +46,13 @@ export default function (input: Element, options?: Partial<Options>) {
     seedMinLength: 1,
     optimizedMinLength: 2,
     threshold: 1000,
+    penalties: {
+      id: 0,
+      attr: 0.5,
+      className: 1,
+      tagName: 2,
+      any: 3
+    }
   }
 
   config = {...defaults, ...options}
@@ -186,7 +193,7 @@ function id(input: Element): Node | null {
   if (elementId && config.idName(elementId)) {
     return {
       name: '#' + cssesc(elementId, {isIdentifier: true}),
-      penalty: 0,
+      penalty: config.penalties.id
     }
   }
   return null
@@ -197,7 +204,7 @@ function attr(input: Element): Node[] {
 
   return attrs.map((attr): Node => ({
     name: '[' + cssesc(attr.name, {isIdentifier: true}) + '="' + cssesc(attr.value) + '"]',
-    penalty: 0.5
+    penalty: config.penalties.attr
   }))
 }
 
@@ -207,7 +214,7 @@ function classNames(input: Element): Node[] {
 
   return names.map((name): Node => ({
     name: '.' + cssesc(name, {isIdentifier: true}),
-    penalty: 1
+    penalty: config.penalties.className
   }))
 }
 
@@ -216,7 +223,7 @@ function tagName(input: Element): Node | null {
   if (config.tagName(name)) {
     return {
       name,
-      penalty: 2
+      penalty: config.penalties.tagName
     }
   }
   return null
@@ -225,7 +232,7 @@ function tagName(input: Element): Node | null {
 function any(): Node {
   return {
     name: '*',
-    penalty: 3
+    penalty: config.penalties.any
   }
 }
 
