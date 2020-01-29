@@ -19,10 +19,11 @@ export type Options = {
   idName: (name: string) => boolean
   className: (name: string) => boolean
   tagName: (name: string) => boolean
-  attr: (name: string, value: string) => boolean
+  attr: (name: string, value: string) => boolean,
   seedMinLength: number
   optimizedMinLength: number
-  threshold: number
+  threshold: number,
+  penalties: any,
 }
 
 let config: Options
