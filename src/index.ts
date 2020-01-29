@@ -104,7 +104,7 @@ function getNodeLevel(input: Element, index: number): Node[] {
   for (let i = 0; i < config.priorityList.length; i++) {
     fnName = config.priorityList[i];
     result = fnNameToPriorityName[fnName](input, index);
-    filteredResult = fnName === 'id' ? maybe(result) : maybe(...result);
+    filteredResult = fnName === 'id' || fnName === 'tagName' ? maybe(result) : maybe(...result);
     if (filteredResult) {
       return filteredResult;
     }
