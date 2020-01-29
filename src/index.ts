@@ -17,7 +17,6 @@ enum Limit {
 export type Options = {
   root: Element
   idName: (name: string) => boolean
-  idPenalty: 0,
   className: (name: string) => boolean
   tagName: (name: string) => boolean
   attr: (name: string, value: string) => boolean
